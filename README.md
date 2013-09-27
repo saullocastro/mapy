@@ -7,7 +7,7 @@ platform to another.
 Composite
 ---------
 A lot of effort has been done in the composite module in order to provide
-efficient and convinient means to calculate the stiffness matrix ABD of
+efficient and convenient means to calculate the stiffness matrix ABD of
 a laminated composite structure.
 
 SymPy utils
@@ -50,12 +50,15 @@ Requires
 - numpy
 - alg3dpy (https://code.google.com/p/alg3dpy/)
 
-VERY IMPORTANT 
---------------
+Important
+---------
 - while the fixed object id for grids, elements etc is not implemented,
 BE CAREFUL when renumbering any entity in the model, since it may loose
 proper reference to the object
 
+License
+-------
+Distrubuted in the 2-Clause BSD license (https://raw.github.com/saullocastro/mapy/master/LICENSE).
 
 Contact: saullogiovani@gmail.com
 
