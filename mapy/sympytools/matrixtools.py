@@ -1,6 +1,6 @@
 import numpy as np
 import sympy
-from sympy import Matrix, integrate, simplify
+from sympy import Matrix, integrate, simplify, trigsimp
 
 def mintegrate(m, var, l1, l2, mname, sufix, norm=False):
     print '\tstarting integration of {mname} over {var}'.format(
@@ -22,7 +22,7 @@ def mintegrate(m, var, l1, l2, mname, sufix, norm=False):
                 format(mname=mname, sufix=sufix, i=i, j=j, var=var)
         m[i, j] = ki
     for (i, j), ki in np.ndenumerate(m):
-        ki = simplify(ki)
+        ki = trigsimp(ki)
         print '\tfinished simplify {mname}_{sufix}[{i}, {j}] over {var}'.\
                 format(mname=mname, sufix=sufix, i=i, j=j, var=var)
         m[i, j] = ki
@@ -49,3 +49,30 @@ def mprint_mathematica(m, mname, sufix):
     filename = 'print_mathematica_{0}_{1}.txt'.format(mname, sufix)
     with open(filename, 'w') as f:
         f.write(print_mathematica(m) + '\n')
+
+def print_as_sparse(m, mname, sufix, use_cse=False):
+    if use_cse:
+        subs, m_list = sympy.cse(m)
+
+    for i, v in enumerate(m_list):
+        m[i] = v
+
+    with open('print_{mname}_{sufix}.txt'.format(mname=mname,
+                                                 sufix=sufix), 'w') as f:
+        def myprint( sth ):
+            f.write( str(sth).strip() + '\n' )
+        myprint('cdefs')
+        num = 10
+        for i, sub in enumerate(subs[::num]):
+            myprint('cdef double ' + ', '.join(
+                        map(str, [j[0] for j in subs[num*i:num*(i+1)]])))
+        myprint('subs')
+        for sub in subs:
+            myprint('{0} = {1}'.format(*sub))
+        myprint('{mname}_{sufix}'.format(mname=mname, sufix=sufix))
+        for (i, j), v in np.ndenumerate(m):
+            if v:
+                myprint('c += 1')
+                myprint('{mname}r[c] = row+{i}'.format(mname=mname, i=i))
+                myprint('{mname}c[c] = col+{j}'.format(mname=mname, j=j))
+                myprint('{mname}v[c] += {v}'.format(mname=mname, v=v))
