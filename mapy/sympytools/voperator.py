@@ -1,13 +1,9 @@
 import sympy
-from sympy import Function, Derivative, Expr, Add, Mul, Pow, Subs, Symbol
+from sympy import Function, Derivative, Expr, Add, Subs, Symbol
 from sympy import Matrix
 
-class myFunction(Function):
-    def __init__(self, *args):
-        super(myFunction, self).__init__(*args)
-
-def func2der(expr):
-    '''Makes:
+def _func2der(expr):
+    '''Does the following:
         u,xt(u(x, t), x, t) = Derivative(u(x, t), x, t)
 
     '''
@@ -33,7 +29,7 @@ def func2der(expr):
                     variables = [eval(i) for i in name.split(',')[1]]
                     a = Derivative(func, *variables)
                 if 'V' in name:
-                    #TODO remove this V and use class
+                    #TODO remove this string-based control and use class
                     a = V(a)
                     a.function = func
             #TODO add more, maybe all that have args
@@ -46,8 +42,8 @@ def func2der(expr):
         return expr.func(*tuple(_new))
     return _main(expr)
 
-def der2func(expr):
-    '''Makes:
+def _der2func(expr):
+    '''Does the following:
         Derivative(u(x, t), x, t) = u,xt(u(x, t), x, t)
 
     '''
@@ -85,7 +81,7 @@ def der2func(expr):
     return _main(expr)
 
 def subs2func(expr):
-    '''Makes:
+    '''Does the following:
         Subs(Derivative(w,x(a, x, t), a), (a,), (b,)) = Dw,x(b, x, t)
 
     '''
@@ -144,8 +140,7 @@ class Vexpr(Expr):
 
     def _include_variational_operator(self):
             _add = ()
-            expr = der2func(self.expr)
-            #expr = func2der(self.expr)
+            expr = _der2func(self.expr)
             for function in self.functions:
                 name = function.__class__.__name__
                 _function = Symbol(name.upper()*3)
@@ -204,7 +199,7 @@ class Vexpr(Expr):
             integrands = []
             non_integrands = []
             d = sympy.collect(self.expr.expand(), _function, evaluate=False)
-            a = func2der(d[_function])
+            a = _func2der(d[_function])
             if a.is_Add:
                 for b in a.args:
                     integrand, non_integrand = _aux_integrate_by_parts(b)
