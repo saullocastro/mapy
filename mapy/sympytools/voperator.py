@@ -118,12 +118,6 @@ class V(Expr):
     def __str__(self):
         return self.__repr__()
 
-    def _eval_derivative(self, *variables):
-        expr = self.expr.diff(*variables)
-        v = V(expr)
-        v.function = self.function
-        return v
-
 class Vexpr(Expr):
     __slots__ = ['functions', '_functions', 'expr',
             'integrands', 'non_integrands']
@@ -147,13 +141,6 @@ class Vexpr(Expr):
 
     def __str__(self):
         return self.__repr__()
-
-    def _eval_derivative(self, *variables):
-        expr = func2der(self.expr)
-        expr = expr.diff(*variables)
-        expr = der2func(expr)
-        functions = ('NOTEVAL',) + self.functions
-        return Vexpr(expr, *functions)
 
     def _include_variational_operator(self):
             _add = ()
@@ -289,8 +276,3 @@ if __name__ == '__main__':
 #TODO
 # implement a class that allows N.T*Vexpr(e, u, v, w), for example
 #   and any other type of algebraic operations
-
-# Look the email first
-# Build a class Variation that will apply the variational
-# Build a class FUnctionalIntegrand that will contain the expression
-# to be integrated...
