@@ -53,22 +53,22 @@ def mprint_mathematica(m, mname, sufix):
 def print_as_sparse(m, mname, sufix, use_cse=False):
     if use_cse:
         subs, m_list = sympy.cse(m)
-
-    for i, v in enumerate(m_list):
-        m[i] = v
+        for i, v in enumerate(m_list):
+            m[i] = v
 
     with open('print_{mname}_{sufix}.txt'.format(mname=mname,
                                                  sufix=sufix), 'w') as f:
         def myprint( sth ):
             f.write( str(sth).strip() + '\n' )
-        myprint('cdefs')
-        num = 10
-        for i, sub in enumerate(subs[::num]):
-            myprint('cdef double ' + ', '.join(
-                        map(str, [j[0] for j in subs[num*i:num*(i+1)]])))
-        myprint('subs')
-        for sub in subs:
-            myprint('{0} = {1}'.format(*sub))
+        if use_cse:
+            myprint('cdefs')
+            num = 10
+            for i, sub in enumerate(subs[::num]):
+                myprint('cdef double ' + ', '.join(
+                            map(str, [j[0] for j in subs[num*i:num*(i+1)]])))
+            myprint('subs')
+            for sub in subs:
+                myprint('{0} = {1}'.format(*sub))
         myprint('{mname}_{sufix}'.format(mname=mname, sufix=sufix))
         for (i, j), v in np.ndenumerate(m):
             if v:
