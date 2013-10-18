@@ -92,7 +92,7 @@ def subs2func(expr):
                 f = a.args[0].expr
                 args = tuple((i for i in f.args if not i in a.args[1]))
                 args += a.args[2]
-                #TODO remove this V and use a class
+                #TODO remove this string-based control and use a class
                 #TODO add a check if some other function has ^V
                 a = Function('V%s' % f.__class__.__name__)(*args)
             #TODO add more, maybe all that have args

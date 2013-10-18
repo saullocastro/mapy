@@ -3,8 +3,8 @@ import sympy
 from sympy import Matrix, integrate, simplify, trigsimp
 
 def mintegrate(m, var, l1, l2, mname, sufix, norm=False):
-    print '\tstarting integration of {mname} over {var}'.format(
-            mname=mname, var=var)
+    print('\tstarting integration of {mname} over {var}'.format(
+            mname=mname, var=var))
     m = Matrix(m)
     sympy.var('AAA')
     if norm:
@@ -18,13 +18,18 @@ def mintegrate(m, var, l1, l2, mname, sufix, norm=False):
             ki = integrate(ki, (AAA, 0, 1), conds='none')
         else:
             ki = integrate(ki, (var, l1, l2), conds='none')
-        print '\tfinished integrate {mname}_{sufix}[{i}, {j}] over {var}'.\
-                format(mname=mname, sufix=sufix, i=i, j=j, var=var)
+        print('\tfinished integrate {mname}_{sufix}[{i}, {j}] over {var}'.\
+                format(mname=mname, sufix=sufix, i=i, j=j, var=var))
         m[i, j] = ki
     for (i, j), ki in np.ndenumerate(m):
-        ki = trigsimp(ki)
-        print '\tfinished simplify {mname}_{sufix}[{i}, {j}] over {var}'.\
-                format(mname=mname, sufix=sufix, i=i, j=j, var=var)
+        try:
+            ki = trigsimp(ki)
+        except:
+            print('\t\ttrigsimp failed {mname}_{sufix}[{i}, {j}] over {var}'.\
+                format(mname=mname, sufix=sufix, i=i, j=j, var=var))
+            ki = simplify(ki)
+        print('\tfinished simplify {mname}_{sufix}[{i}, {j}] over {var}'.\
+                format(mname=mname, sufix=sufix, i=i, j=j, var=var))
         m[i, j] = ki
     # printing
     filename = 'print_{mname}_{sufix}_over_{var}.txt'.format(
@@ -50,7 +55,18 @@ def mprint_mathematica(m, mname, sufix):
     with open(filename, 'w') as f:
         f.write(print_mathematica(m) + '\n')
 
-def print_as_sparse(m, mname, sufix, use_cse=False):
+def mprint(m, mname, sufix):
+    with open('print_{mname}_{sufix}.txt'.format(
+        mname=mname, sufix=sufix), 'w') as f:
+        def myprint( sth ):
+            f.write( str(sth).strip() + '\n' )
+        myprint('{mname}_{sufix}'.format(mname=mname, sufix=sufix))
+        for (i, j), v in np.ndenumerate(m):
+            if v:
+                myprint('{mname}[row+{i},col+{j}] += {v}'.format(
+                    mname=mname, v=v, i=i, j=j))
+
+def mprint_as_sparse(m, mname, sufix, use_cse=False):
     if use_cse:
         subs, m_list = sympy.cse(m)
         for i, v in enumerate(m_list):
