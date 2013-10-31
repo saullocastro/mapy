@@ -2,7 +2,7 @@ import numpy as np
 import sympy
 from sympy import Matrix, integrate, simplify, trigsimp
 
-def mintegrate(m, var, l1, l2, mname, sufix, norm=False):
+def mintegrate(m, var, l1, l2, mname, sufix, norm=False, do_simplify=False):
     print('\tstarting integration of {mname} over {var}'.format(
             mname=mname, var=var))
     m = Matrix(m)
@@ -23,7 +23,10 @@ def mintegrate(m, var, l1, l2, mname, sufix, norm=False):
         m[i, j] = ki
     for (i, j), ki in np.ndenumerate(m):
         try:
-            ki = trigsimp(ki)
+            if do_simplify:
+                ki = simplify(ki)
+            else:
+                ki = trigsimp(ki)
         except:
             print('\t\ttrigsimp failed {mname}_{sufix}[{i}, {j}] over {var}'.\
                 format(mname=mname, sufix=sufix, i=i, j=j, var=var))
@@ -44,9 +47,11 @@ def mintegrate(m, var, l1, l2, mname, sufix, norm=False):
     return m
 
 def dbl_mintegrate(m, a, a1, a2, b, b1, b2, mname, sufix,
-        norm1=False, norm2=False):
-    m = mintegrate(m, a, a1, a2, mname, sufix, norm=norm1)
-    m = mintegrate(m, b, b1, b2, mname, sufix, norm=norm2)
+        norm1=False, norm2=False, do_simplify=False):
+    m = mintegrate(m, a, a1, a2, mname, sufix, norm=norm1,
+                   do_simplify=do_simplify)
+    m = mintegrate(m, b, b1, b2, mname, sufix, norm=norm2,
+                   do_simplify=do_simplify)
     return m
 
 def mprint_mathematica(m, mname, sufix):
@@ -55,12 +60,18 @@ def mprint_mathematica(m, mname, sufix):
     with open(filename, 'w') as f:
         f.write(print_mathematica(m) + '\n')
 
-def mprint(m, mname, sufix):
-    with open('print_{mname}_{sufix}.txt'.format(
-        mname=mname, sufix=sufix), 'w') as f:
+def mprint(m, mname, sufix=''):
+    if sufix:
+        filename = 'print_{mname}_{sufix}.txt'.format(mname=mname, sufix=sufix)
+    else:
+        filename = 'print_{mname}.txt'.format(mname=mname)
+    with open(filename, 'w') as f:
         def myprint( sth ):
             f.write( str(sth).strip() + '\n' )
-        myprint('{mname}_{sufix}'.format(mname=mname, sufix=sufix))
+        if sufix:
+            myprint('{mname}_{sufix}'.format(mname=mname, sufix=sufix))
+        else:
+            myprint('{mname}'.format(mname=mname))
         for (i, j), v in np.ndenumerate(m):
             if v:
                 myprint('{mname}[row+{i},col+{j}] += {v}'.format(
@@ -86,9 +97,19 @@ def mprint_as_sparse(m, mname, sufix, use_cse=False):
             for sub in subs:
                 myprint('{0} = {1}'.format(*sub))
         myprint('{mname}_{sufix}'.format(mname=mname, sufix=sufix))
+        num = len([i for i in list(m) if i])
+        myprint('{mname}_{sufix}_num={num}'.format(
+            mname=mname, sufix=sufix, num=num))
         for (i, j), v in np.ndenumerate(m):
             if v:
                 myprint('c += 1')
                 myprint('{mname}r[c] = row+{i}'.format(mname=mname, i=i))
                 myprint('{mname}c[c] = col+{j}'.format(mname=mname, j=j))
                 myprint('{mname}v[c] += {v}'.format(mname=mname, v=v))
+
+def vdiff(x, vector):
+    x = np.array(x)
+    shape = x.shape
+    ans = [np.array([e.diff(vi) for e in x.ravel()]) for vi in vector]
+    ans = [a.reshape(shape) for a in ans]
+    return np.array(ans).swapaxes(0, 1)
