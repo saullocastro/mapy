@@ -1,8 +1,9 @@
 import numpy as np
 import sympy
-from sympy import Matrix, integrate, simplify, trigsimp
+from sympy import Matrix, integrate, simplify, trigsimp, solve
 
-def mintegrate(m, var, l1, l2, mname, sufix, norm=False, do_simplify=False):
+def mintegrate(m, var, l1, l2, mname, sufix, norm=False, do_simplify=False,
+               conds='none'):
     print('\tstarting integration of {mname} over {var}'.format(
             mname=mname, var=var))
     m = Matrix(m)
@@ -14,29 +15,33 @@ def mintegrate(m, var, l1, l2, mname, sufix, norm=False, do_simplify=False):
         m *= (l2-l1)
     # integration
     for (i, j), ki in np.ndenumerate(m):
-        if norm:
-            ki = integrate(ki, (AAA, 0, 1), conds='none')
-        else:
-            ki = integrate(ki, (var, l1, l2), conds='none')
-        print('\tfinished integrate {mname}_{sufix}[{i}, {j}] over {var}'.\
-                format(mname=mname, sufix=sufix, i=i, j=j, var=var))
+        tmp = '{mname}_{sufix}[{i}, {j}] over {var}'.format(mname=mname,
+                  sufix=sufix, i=i, j=j, var=var)
+        try:
+            if norm:
+                ki = integrate(ki, (AAA, 0, 1), conds=conds)
+            else:
+                ki = integrate(ki, (var, l1, l2), conds=conds)
+            print('\tfinished integrate {tmp}'.format(tmp=tmp))
+        except:
+            print('\t\tintegrate() failed for {tmp}'.format(tmp=tmp))
         m[i, j] = ki
     for (i, j), ki in np.ndenumerate(m):
+        tmp = '{mname}_{sufix}[{i}, {j}] over {var}'.format(mname=mname,
+                  sufix=sufix, i=i, j=j, var=var)
         try:
             if do_simplify:
                 ki = simplify(ki)
             else:
                 ki = trigsimp(ki)
         except:
-            print('\t\ttrigsimp failed {mname}_{sufix}[{i}, {j}] over {var}'.\
-                format(mname=mname, sufix=sufix, i=i, j=j, var=var))
+            print('\t\ttrigsimp failed {tmp}'.format(tmp=tmp))
             ki = simplify(ki)
-        print('\tfinished simplify {mname}_{sufix}[{i}, {j}] over {var}'.\
-                format(mname=mname, sufix=sufix, i=i, j=j, var=var))
+        print('\tfinished simplify {tmp}'.format(tmp=tmp))
         m[i, j] = ki
     # printing
-    filename = 'print_{mname}_{sufix}_over_{var}.txt'.format(
-            mname=mname, sufix=sufix, var=var)
+    filename = 'print_{mname}_{sufix}_over_{var}.txt'.format(mname=mname,
+                   sufix=sufix, var=var)
     with open(filename, 'w') as f:
         def myprint( sth ):
             f.write( str(sth).strip() + '\n' )
@@ -47,11 +52,11 @@ def mintegrate(m, var, l1, l2, mname, sufix, norm=False, do_simplify=False):
     return m
 
 def dbl_mintegrate(m, a, a1, a2, b, b1, b2, mname, sufix,
-        norm1=False, norm2=False, do_simplify=False):
+        norm1=False, norm2=False, do_simplify=False, conds='none'):
     m = mintegrate(m, a, a1, a2, mname, sufix, norm=norm1,
-                   do_simplify=do_simplify)
+                   do_simplify=do_simplify, conds=conds)
     m = mintegrate(m, b, b1, b2, mname, sufix, norm=norm2,
-                   do_simplify=do_simplify)
+                   do_simplify=do_simplify, conds=conds)
     return m
 
 def mprint_mathematica(m, mname, sufix):
@@ -107,9 +112,34 @@ def mprint_as_sparse(m, mname, sufix, use_cse=False):
                 myprint('{mname}c[c] = col+{j}'.format(mname=mname, j=j))
                 myprint('{mname}v[c] += {v}'.format(mname=mname, v=v))
 
-def vdiff(x, vector):
+def old_vdiff(x, vector):
     x = np.array(x)
     shape = x.shape
     ans = [np.array([e.diff(vi) for e in x.ravel()]) for vi in vector]
     ans = [a.reshape(shape) for a in ans]
     return np.array(ans).swapaxes(0, 1)
+
+def vdiff(x, vector):
+    x = np.array(x)
+    shape = x.shape
+    ans = []
+    for vi in vector:
+        if vi.is_Symbol:
+            tmp = []
+            for e in x.ravel():
+                tmp.append(e.diff(vi))
+        else:
+            subs = {}
+            new_var = sympy.var('new_var')
+            for s in vi.free_symbols:
+                subs[s] = solve(new_var - vi, s)[0]
+            tmp = []
+            for e in x.ravel():
+                e = e.subs(subs)
+                e = e.diff(new_var)
+                e = e.subs({new_var: vi})
+                tmp.append(e.diff(new_var))
+        ans.append(np.array(tmp))
+    ans = [a.reshape(shape) for a in ans]
+    return np.array(ans).swapaxes(0, 1)
+
