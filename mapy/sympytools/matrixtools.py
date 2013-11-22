@@ -82,7 +82,7 @@ def mprint(m, mname, sufix=''):
                 myprint('{mname}[row+{i},col+{j}] += {v}'.format(
                     mname=mname, v=v, i=i, j=j))
 
-def mprint_as_sparse(m, mname, sufix, use_cse=False):
+def mprint_as_sparse(m, mname, sufix, numeric=False, use_cse=False):
     if use_cse:
         subs, m_list = sympy.cse(m)
         for i, v in enumerate(m_list):
@@ -101,16 +101,38 @@ def mprint_as_sparse(m, mname, sufix, use_cse=False):
             myprint('subs')
             for sub in subs:
                 myprint('{0} = {1}'.format(*sub))
-        myprint('{mname}_{sufix}'.format(mname=mname, sufix=sufix))
-        num = len([i for i in list(m) if i])
-        myprint('{mname}_{sufix}_num={num}'.format(
-            mname=mname, sufix=sufix, num=num))
-        for (i, j), v in np.ndenumerate(m):
-            if v:
-                myprint('c += 1')
-                myprint('{mname}r[c] = row+{i}'.format(mname=mname, i=i))
-                myprint('{mname}c[c] = col+{j}'.format(mname=mname, j=j))
-                myprint('{mname}v[c] += {v}'.format(mname=mname, v=v))
+        if not numeric:
+            myprint('{mname}_{sufix}'.format(mname=mname, sufix=sufix))
+            num = len([i for i in list(m) if i])
+            myprint('{mname}_{sufix}_num={num}'.format(
+                mname=mname, sufix=sufix, num=num))
+            for (i, j), v in np.ndenumerate(m):
+                if v:
+                    myprint('c += 1')
+                    myprint('{mname}r[c] = row+{i}'.format(mname=mname, i=i))
+                    myprint('{mname}c[c] = col+{j}'.format(mname=mname, j=j))
+                    myprint('{mname}v[c] += {v}'.format(mname=mname, v=v))
+        else:
+            myprint('{mname}_{sufix}'.format(mname=mname, sufix=sufix))
+            num = len([i for i in list(m) if i])
+            myprint('{mname}_{sufix}_num={num}'.format(
+                mname=mname, sufix=sufix, num=num))
+            myprint('#')
+            myprint('# values')
+            myprint('#')
+            for (i, j), v in np.ndenumerate(m):
+                if v:
+                    myprint('c += 1')
+                    myprint('fval[c+fdim*pti] = {v}'.format(mname=mname, v=v))
+            myprint('#')
+            myprint('# rows and columns')
+            myprint('#')
+            for (i, j), v in np.ndenumerate(m):
+                if v:
+                    myprint('c += 1')
+                    myprint('{mname}r[c] = row+{i}'.format(mname=mname, i=i))
+                    myprint('{mname}c[c] = col+{j}'.format(mname=mname, j=j))
+
 
 def old_vdiff(x, vector):
     x = np.array(x)
