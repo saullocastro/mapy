@@ -102,9 +102,9 @@ def mprint_as_sparse(m, mname, sufix, numeric=False, use_cse=False):
             for sub in subs:
                 myprint('{0} = {1}'.format(*sub))
         if not numeric:
-            myprint('{mname}_{sufix}'.format(mname=mname, sufix=sufix))
+            myprint('# {mname}_{sufix}'.format(mname=mname, sufix=sufix))
             num = len([i for i in list(m) if i])
-            myprint('{mname}_{sufix}_num={num}'.format(
+            myprint('# {mname}_{sufix}_num={num}'.format(
                 mname=mname, sufix=sufix, num=num))
             for (i, j), v in np.ndenumerate(m):
                 if v:
@@ -113,9 +113,9 @@ def mprint_as_sparse(m, mname, sufix, numeric=False, use_cse=False):
                     myprint('{mname}c[c] = col+{j}'.format(mname=mname, j=j))
                     myprint('{mname}v[c] += {v}'.format(mname=mname, v=v))
         else:
-            myprint('{mname}_{sufix}'.format(mname=mname, sufix=sufix))
+            myprint('# {mname}_{sufix}'.format(mname=mname, sufix=sufix))
             num = len([i for i in list(m) if i])
-            myprint('{mname}_{sufix}_num={num}'.format(
+            myprint('# {mname}_{sufix}_num={num}'.format(
                 mname=mname, sufix=sufix, num=num))
             myprint('#')
             myprint('# values')
@@ -130,8 +130,8 @@ def mprint_as_sparse(m, mname, sufix, numeric=False, use_cse=False):
             for (i, j), v in np.ndenumerate(m):
                 if v:
                     myprint('c += 1')
-                    myprint('{mname}r[c] = row+{i}'.format(mname=mname, i=i))
-                    myprint('{mname}c[c] = col+{j}'.format(mname=mname, j=j))
+                    myprint('rows[c] = row+{i}'.format(i=i))
+                    myprint('cols[c] = col+{j}'.format(j=j))
 
 
 def old_vdiff(x, vector):
