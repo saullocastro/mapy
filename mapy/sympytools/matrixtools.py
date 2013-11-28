@@ -130,8 +130,10 @@ def mprint_as_sparse(m, mname, sufix, numeric=False, use_cse=False):
             for (i, j), v in np.ndenumerate(m):
                 if v:
                     myprint('c += 1')
+                    myprint('csub += 1')
                     myprint('rows[c] = row+{i}'.format(i=i))
                     myprint('cols[c] = col+{j}'.format(j=j))
+                    myprint('k0Lv[c] = subv[csub]')
 
 
 def old_vdiff(x, vector):
