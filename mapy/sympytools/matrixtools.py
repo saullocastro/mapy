@@ -43,8 +43,8 @@ def mintegrate(m, var, l1, l2, mname, sufix, norm=False, do_simplify=False,
     filename = 'print_{mname}_{sufix}_over_{var}.txt'.format(mname=mname,
                    sufix=sufix, var=var)
     with open(filename, 'w') as f:
-        def myprint( sth ):
-            f.write( str(sth).strip() + '\n' )
+        def myprint(sth):
+            f.write(str(sth).strip() + '\n')
         myprint('matrix ' + mname + ' in file ' + filename)
         for (i, j), v in np.ndenumerate(m):
             if v:
@@ -65,14 +65,16 @@ def mprint_mathematica(m, mname, sufix):
     with open(filename, 'w') as f:
         f.write(print_mathematica(m) + '\n')
 
-def mprint(m, mname, sufix=''):
+def mprint(m, mname, sufix='', header=None):
     if sufix:
         filename = 'print_{mname}_{sufix}.txt'.format(mname=mname, sufix=sufix)
     else:
         filename = 'print_{mname}.txt'.format(mname=mname)
     with open(filename, 'w') as f:
-        def myprint( sth ):
-            f.write( str(sth).strip() + '\n' )
+        if header:
+            f.write(header)
+        def myprint(sth):
+            f.write(str(sth).strip() + '\n')
         if sufix:
             myprint('{mname}_{sufix}'.format(mname=mname, sufix=sufix))
         else:
@@ -82,16 +84,19 @@ def mprint(m, mname, sufix=''):
                 myprint('{mname}[row+{i},col+{j}] += {v}'.format(
                     mname=mname, v=v, i=i, j=j))
 
-def mprint_as_sparse(m, mname, sufix, numeric=False, use_cse=False):
+def mprint_as_sparse(m, mname, sufix, numeric=False, use_cse=False,
+        header=None):
     if use_cse:
         subs, m_list = sympy.cse(m)
         for i, v in enumerate(m_list):
             m[i] = v
 
-    with open('print_{mname}_{sufix}.txt'.format(mname=mname,
-                                                 sufix=sufix), 'w') as f:
-        def myprint( sth ):
-            f.write( str(sth).strip() + '\n' )
+    filename = 'print_{mname}_{sufix}.txt'.format(mname=mname, sufix=sufix)
+    with open(filename, 'w') as f:
+        if header:
+            f.write(header)
+        def myprint(sth):
+            f.write(str(sth).strip() + '\n')
         if use_cse:
             myprint('cdefs')
             num = 10
@@ -134,7 +139,7 @@ def mprint_as_sparse(m, mname, sufix, numeric=False, use_cse=False):
                     myprint('rows[c] = row+{i}'.format(i=i))
                     myprint('cols[c] = col+{j}'.format(j=j))
                     myprint('k0Lv[c] = subv[csub]')
-
+    return open(filename).read()
 
 def old_vdiff(x, vector):
     x = np.array(x)
