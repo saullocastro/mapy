@@ -60,22 +60,21 @@ def evaluateMul(expr):
     end = 0
     if expr.args <> ():
         if isinstance(expr.args[-1], D):
-            if len(expr.args[:-1])==1:
-                cte = expr.args[0]
-                return Zero()
-            end = -1
+            return Zero()
     for i in range(len(expr.args)-1+end, -1, -1):
         arg = expr.args[i]
         if isinstance(arg, Add):
             arg = evaluateAdd(arg)
-        if isinstance(arg, Mul):
+        elif isinstance(arg, Mul):
             arg = evaluateMul(arg)
-        if isinstance(arg, D):
+        elif isinstance(arg, D):
             left = Mul(*expr.args[:i])
             right = Mul(*expr.args[i+1:])
             right = mydiff(right, *arg.variables)
             ans = left * right
             return evaluateMul(ans)
+        else:
+            pass
     return expr
 
 def evaluateAdd(expr):
@@ -83,10 +82,12 @@ def evaluateAdd(expr):
     for arg in expr.args:
         if isinstance(arg, Mul):
             arg = evaluateMul(arg)
-        if isinstance(arg, Add):
+        elif isinstance(arg, Add):
             arg = evaluateAdd(arg)
-        if isinstance(arg, D):
+        elif isinstance(arg, D):
             arg = Zero()
+        else:
+            pass
         newargs.append(arg)
     return Add(*newargs)
 
