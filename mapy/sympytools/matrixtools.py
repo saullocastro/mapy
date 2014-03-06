@@ -1,6 +1,6 @@
 import numpy as np
 import sympy
-from sympy import Matrix, integrate, simplify, trigsimp, solve
+from sympy import Matrix, integrate, simplify, trigsimp, solve, collect
 
 def mintegrate(m, var, l1, l2, mname, sufix, norm=False, do_simplify=False,
                conds='none'):
@@ -44,7 +44,7 @@ def mintegrate(m, var, l1, l2, mname, sufix, norm=False, do_simplify=False,
                    sufix=sufix, var=var)
     with open(filename, 'w') as f:
         def myprint(sth):
-            f.write(str(sth).strip() + '\n')
+            lines.append(str(sth).strip() + '\n')
         myprint('matrix ' + mname + ' in file ' + filename)
         for (i, j), v in np.ndenumerate(m):
             if v:
@@ -85,61 +85,71 @@ def mprint(m, mname, sufix='', header=None):
                     mname=mname, v=v, i=i, j=j))
 
 def mprint_as_sparse(m, mname, sufix, numeric=False, use_cse=False,
-        header=None):
+        header=None, print_file=True, collect_for=None):
     if use_cse:
         subs, m_list = sympy.cse(m)
         for i, v in enumerate(m_list):
             m[i] = v
-
     filename = 'print_{mname}_{sufix}.txt'.format(mname=mname, sufix=sufix)
-    with open(filename, 'w') as f:
-        if header:
-            f.write(header)
-        def myprint(sth):
-            f.write(str(sth).strip() + '\n')
-        if use_cse:
-            myprint('cdefs')
-            num = 10
-            for i, sub in enumerate(subs[::num]):
-                myprint('cdef double ' + ', '.join(
-                            map(str, [j[0] for j in subs[num*i:num*(i+1)]])))
-            myprint('subs')
-            for sub in subs:
-                myprint('{0} = {1}'.format(*sub))
-        if not numeric:
-            myprint('# {mname}_{sufix}'.format(mname=mname, sufix=sufix))
-            num = len([i for i in list(m) if i])
-            myprint('# {mname}_{sufix}_num={num}'.format(
-                mname=mname, sufix=sufix, num=num))
-            for (i, j), v in np.ndenumerate(m):
-                if v:
-                    myprint('c += 1')
-                    myprint('{mname}r[c] = row+{i}'.format(mname=mname, i=i))
-                    myprint('{mname}c[c] = col+{j}'.format(mname=mname, j=j))
-                    myprint('{mname}v[c] += {v}'.format(mname=mname, v=v))
-        else:
-            myprint('# {mname}_{sufix}'.format(mname=mname, sufix=sufix))
-            num = len([i for i in list(m) if i])
-            myprint('# {mname}_{sufix}_num={num}'.format(
-                mname=mname, sufix=sufix, num=num))
-            myprint('#')
-            myprint('# values')
-            myprint('#')
-            for (i, j), v in np.ndenumerate(m):
-                if v:
-                    myprint('c += 1')
-                    myprint('fval[c+fdim*pti] = {v}'.format(mname=mname, v=v))
-            myprint('#')
-            myprint('# rows and columns')
-            myprint('#')
-            for (i, j), v in np.ndenumerate(m):
-                if v:
-                    myprint('c += 1')
-                    myprint('csub += 1')
-                    myprint('rows[c] = row+{i}'.format(i=i))
-                    myprint('cols[c] = col+{j}'.format(j=j))
-                    myprint('k0Lv[c] = subv[csub]')
-    return open(filename).read()
+    ls = []
+    if header:
+        ls.append(header)
+    if use_cse:
+        ls.append('cdefs')
+        num = 10
+        for i, sub in enumerate(subs[::num]):
+            ls.append('cdef double ' + ', '.join(
+                        map(str, [j[0] for j in subs[num*i:num*(i+1)]])))
+        ls.append('subs')
+        for sub in subs:
+            ls.append('{0} = {1}'.format(*sub))
+    if not numeric:
+        ls.append('# {mname}_{sufix}'.format(mname=mname, sufix=sufix))
+        num = len([i for i in list(m) if i])
+        ls.append('# {mname}_{sufix}_num={num}'.format(
+            mname=mname, sufix=sufix, num=num))
+        for (i, j), v in np.ndenumerate(m):
+            if v:
+                ls.append('c += 1')
+
+                ls.append('{mname}r[c] = row+{i}'.format(mname=mname, i=i))
+                ls.append('{mname}c[c] = col+{j}'.format(mname=mname, j=j))
+
+                if collect_for!=None:
+                    v = collect(v, collect_for, evaluate=False)
+                    ls.append('{mname}v[c] +='.format(mname=mname))
+                    for k, expr in v.items():
+                        ls.append('#   collected for {k}'.format(k=k))
+                        ls.append('    {expr}'.format(expr=k*expr))
+                else:
+                    ls.append('{mname}v[c] += {v}'.format(mname=mname, v=v))
+    else:
+        ls.append('# {mname}_{sufix}'.format(mname=mname, sufix=sufix))
+        num = len([i for i in list(m) if i])
+        ls.append('# {mname}_{sufix}_num={num}'.format(
+            mname=mname, sufix=sufix, num=num))
+        ls.append('#')
+        ls.append('# values')
+        ls.append('#')
+        for (i, j), v in np.ndenumerate(m):
+            if v:
+                ls.append('c += 1')
+                ls.append('fval[c+fdim*pti] = {v}'.format(mname=mname, v=v))
+        ls.append('#')
+        ls.append('# rows and columns')
+        ls.append('#')
+        for (i, j), v in np.ndenumerate(m):
+            if v:
+                ls.append('c += 1')
+                ls.append('csub += 1')
+                ls.append('rows[c] = row+{i}'.format(i=i))
+                ls.append('cols[c] = col+{j}'.format(j=j))
+                ls.append('k0Lv[c] = subv[csub]')
+    string = '\n'.join(ls)
+    if print_file:
+        with open(filename, 'w') as f:
+            f.write(sting)
+    return string
 
 def old_vdiff(x, vector):
     x = np.array(x)
