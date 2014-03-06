@@ -8,17 +8,21 @@ Composite
 ---------
 A lot of effort has been done in the composite module in order to provide
 efficient and convenient means to calculate the stiffness matrix ABD of
-a laminated composite structure.
+a laminated composite structure using the Classical Laminated Plate Theory
+(CLPT). When the First-order Shear Deformation Theory (FSDT) is used the user
+can calculate the matrix ABDE, with E containing the terms related to the
+transverse shear strains.
 
 SymPy utils
 -----------
 The highlight is the differential operator useful to represent and evaluate
-strain-displacement matrices (kinematic relations).
+strain-displacement matrices (kinematic relations). Many other functions used
+by other modules are also available.
 
 Structural analysis
 -------------------
 More implementation effort has been applied on structural analysis,
-but it can be improved for any finite element modeling purpose.
+but it must be improved for any finite element modeling purpose.
 
 Already developed
 -----------------
@@ -60,5 +64,5 @@ License
 -------
 Distrubuted in the 2-Clause BSD license (https://raw.github.com/saullocastro/mapy/master/LICENSE).
 
-Contact: saullogiovani@gmail.com
+Contact: castrosaullo@gmail.com
 
