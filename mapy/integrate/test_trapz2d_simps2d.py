@@ -3,8 +3,7 @@ import pyximport; pyximport.install()
 import sympy
 from sympy import Matrix, lambdify, cos, sin
 
-from integratev import _trapz2d as trapz2d
-from integratev import _simps2d as simps2d
+from integratev import trapz2d, simps2d
 
 sympy.var('x, y')
 m1 = Matrix([[    x*y,    x*y**2,    x*y**3 ],
@@ -34,7 +33,7 @@ def func1b(x,y,out,alpha,beta):
                            [ x**2*y, x**2*y**2, x**2*y**3 ],
                            [ x**3*y, x**3*y**2, x**3*y**3 ]])
 
-def func2b(x,y,out,alpha,beta):
+def func2b(x, y, out, alpha, beta):
     from numpy import sin, cos
     out *= beta
     out += alpha*np.array(

@@ -2,8 +2,9 @@ from libcpp cimport bool
 from cpython cimport tuple
 
 import numpy as np
-from numpy.linalg import inv
 cimport numpy as np
+
+from scipy.linalg import inv
 
 DOUBLE = np.float64
 ctypedef np.float_t cDOUBLE
@@ -47,17 +48,17 @@ def polyv(f, np.ndarray xs, int nf, int order=2, int dimf=1):
             out += ais[k-1,:]/k * (xis[-1]**k - xis[0]**k)
     return out
 
-def _trapz2d(f, double xmin, double xmax, int m,
+def trapz2d(f, double xmin, double xmax, int m,
                 double ymin, double ymax, int n,
                 np.ndarray out=None, tuple args=()):
-    return trapz2d(f, xmin, xmax, m, ymin, ymax, n, out, args)
+    return _trapz2d(f, xmin, xmax, m, ymin, ymax, n, out, args)
 
-def _simps2d(f, double xmin, double xmax, int m,
+def simps2d(f, double xmin, double xmax, int m,
                 double ymin, double ymax, int n,
                 np.ndarray out=None, tuple args=()):
-    return simps2d(f, xmin, xmax, m, ymin, ymax, n, out, args)
+    return _simps2d(f, xmin, xmax, m, ymin, ymax, n, out, args)
 
-cdef trapz2d(f, double xmin, double xmax, int m,
+cdef _trapz2d(f, double xmin, double xmax, int m,
                 double ymin, double ymax, int n,
                 np.ndarray out, tuple args):
     '''Integrate `f` for two variables
@@ -78,42 +79,42 @@ cdef trapz2d(f, double xmin, double xmax, int m,
 
     if out is None:
         # first dummy evaluation
-        out = f(xmin, ymin, args=args)
+        out = f(xmin, ymin, *args)
         out.fill(0.)
         #
         if not isinstance(out, np.ndarray):
             raise ValueError('If `out=None`, the supplied function must ' +
                              'return a np.ndarray')
         for i,j in ( (0,0), (m,0), (0,n), (m,n) ):
-            out += f(xs[i], ys[j], args=args)
+            out += f(xs[i], ys[j], *args)
         for i in range(1,m): # i from 1 to m-1
             for j in (0, n):
-                out += 2 * f(xs[i], ys[j], args=args)
+                out += 2 * f(xs[i], ys[j], *args)
         for i in (0, m):
             for j in range(1,n): # j from 1 to n-1
-                out += 2 * f(xs[i], ys[j], args=args)
+                out += 2 * f(xs[i], ys[j], *args)
         for i in range(1,m): # i from 1 to m-1
             for j in range(1,n): # j from 1 to n-1
-                out += 4 * f(xs[i], ys[j], args=args)
+                out += 4 * f(xs[i], ys[j], *args)
         out *= c
         return out
     else:
         if not isinstance(out, np.ndarray):
             raise ValueError('The supplied `out` must be a np.ndarray')
         for i,j in ( (0, 0), (m, 0), (0, n), (m, n) ):
-            f(xs[i], ys[j], out=out, alpha=1*c, beta=1, args=args)
+            f(xs[i], ys[j], out=out, alpha=1*c, beta=1, *args)
         for i in range(1, m): # i from 1 to m-1
             for j in (0, n):
-                f(xs[i], ys[j], out=out, alpha=2*c, beta=1, args=args)
+                f(xs[i], ys[j], out=out, alpha=2*c, beta=1, *args)
         for i in (0, m):
             for j in range(1, n): # j from 1 to n-1
-                f(xs[i], ys[j], out=out, alpha=2*c, beta=1, args=args)
+                f(xs[i], ys[j], out=out, alpha=2*c, beta=1, *args)
         for i in range(1, m): # i from 1 to m-1
             for j in range(1, n): # j from 1 to n-1
-                f(xs[i], ys[j], out=out, alpha=4*c, beta=1, args=args)
+                f(xs[i], ys[j], out=out, alpha=4*c, beta=1, *args)
         return 0
 
-cdef simps2d(f, double xmin, double xmax, int m,
+cdef _simps2d(f, double xmin, double xmax, int m,
                 double ymin, double ymax, int n,
                 np.ndarray out, tuple args):
     '''Integrate `f` for two variables
@@ -146,38 +147,38 @@ cdef simps2d(f, double xmin, double xmax, int m,
 
     if out is None:
         # first dummy evaluation
-        out = f(xmin, ymin, args=args)
+        out = f(xmin, ymin, *args)
         out.fill(0.)
         if not isinstance(out, np.ndarray):
             raise ValueError('If `out=None`, the supplied function must ' +
                              'return a np.ndarray')
         #
         for i,j in ( (0,0), (2*m,0), (0,2*n), (2*m,2*n) ):
-            out += f(xs[i], ys[j], args=args)
+            out += f(xs[i], ys[j], *args)
         for i in (0, 2*m):
             for j in range(1, n+1):
-                out += 4 * f(xs[i], ys[2*j-1], args=args)
+                out += 4 * f(xs[i], ys[2*j-1], *args)
         for i in range(1, m+1):
             for j in (0, 2*n):
-                out += 4 * f(xs[2*i-1], ys[j], args=args)
+                out += 4 * f(xs[2*i-1], ys[j], *args)
         for i in (0, 2*m):
             for j in range(1, n):
-                out += 2 * f(xs[i], ys[2*j], args=args)
+                out += 2 * f(xs[i], ys[2*j], *args)
         for i in range(1, m):
             for j in (0, 2*n):
-                out += 2 * f(xs[2*i], ys[j], args=args)
+                out += 2 * f(xs[2*i], ys[j], *args)
         for i in range(1, m+1):
             for j in range(1, n+1):
-                out += 16 * f(xs[2*i-1], ys[2*j-1], args=args)
+                out += 16 * f(xs[2*i-1], ys[2*j-1], *args)
         for i in range(1, m+1):
             for j in range(1, n):
-                out += 8 * f(xs[2*i-1], ys[2*j], args=args)
+                out += 8 * f(xs[2*i-1], ys[2*j], *args)
         for i in range(1, m):
             for j in range(1, n+1):
-                out += 8 * f(xs[2*i], ys[2*j-1], args=args)
+                out += 8 * f(xs[2*i], ys[2*j-1], *args)
         for i in range(1, m):
             for j in range(1, n):
-                out += 4 * f(xs[2*i], ys[2*j], args=args)
+                out += 4 * f(xs[2*i], ys[2*j], *args)
         out *= c
         return out
     else:
@@ -185,30 +186,30 @@ cdef simps2d(f, double xmin, double xmax, int m,
             raise ValueError('The supplied `out` must be a np.ndarray')
         #
         for i,j in ( (0,0), (2*m,0), (0,2*n), (2*m,2*n) ):
-            f(xs[i], ys[j], out=out, alpha=1*c, beta=1, args=args)
+            f(xs[i], ys[j], out=out, alpha=1*c, beta=1, *args)
         for i in (0, 2*m):
             for j in range(1, n+1):
-                f(xs[i], ys[2*j-1], out=out, alpha=4*c, beta=1, args=args)
+                f(xs[i], ys[2*j-1], out=out, alpha=4*c, beta=1, *args)
         for i in range(1, m+1):
             for j in (0, 2*n):
-                f(xs[2*i-1], ys[j], out=out, alpha=4*c, beta=1, args=args)
+                f(xs[2*i-1], ys[j], out=out, alpha=4*c, beta=1, *args)
         for i in (0, 2*m):
             for j in range(1, n):
-                f(xs[i], ys[2*j], out=out, alpha=2*c, beta=1, args=args)
+                f(xs[i], ys[2*j], out=out, alpha=2*c, beta=1, *args)
         for i in range(1, m):
             for j in (0, 2*n):
-                f(xs[2*i], ys[j], out=out, alpha=2*c, beta=1, args=args)
+                f(xs[2*i], ys[j], out=out, alpha=2*c, beta=1, *args)
         for i in range(1, m+1):
             for j in range(1, n+1):
-                f(xs[2*i-1], ys[2*j-1], out=out, alpha=16*c, beta=1, args=args)
+                f(xs[2*i-1], ys[2*j-1], out=out, alpha=16*c, beta=1, *args)
         for i in range(1, m+1):
             for j in range(1, n):
-                f(xs[2*i-1], ys[2*j], out=out, alpha=8*c, beta=1, args=args)
+                f(xs[2*i-1], ys[2*j], out=out, alpha=8*c, beta=1, *args)
         for i in range(1, m):
             for j in range(1, n+1):
-                f(xs[2*i], ys[2*j-1], out=out, alpha=8*c, beta=1, args=args)
+                f(xs[2*i], ys[2*j-1], out=out, alpha=8*c, beta=1, *args)
         for i in range(1, m):
             for j in range(1, n):
-                f(xs[2*i], ys[2*j], out=out, alpha=4*c, beta=1, args=args)
+                f(xs[2*i], ys[2*j], out=out, alpha=4*c, beta=1, *args)
         return 0
 
