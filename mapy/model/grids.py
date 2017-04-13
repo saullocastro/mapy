@@ -1,9 +1,11 @@
-from mapy.reader import user_setattr
-from alg3dpy import Point
-from coords import Coord, CoordR, CoordC, CoordS
-from mapy.constants import *
-import numpy as np
 import random as rdm
+
+import numpy as np
+from alg3dpy import Point
+
+from mapy.reader import user_setattr
+from mapy.coords import Coord, CoordR, CoordC, CoordS
+from mapy.constants import *
 
 class Grid( Point ):
     """
@@ -24,7 +26,7 @@ class Grid( Point ):
     seid       superelement id
     cons       dictionary that will be filled with all constraints applied
                to this grid
-    loads      dictionary that will be filled with all loads applied to 
+    loads      dictionary that will be filled with all loads applied to
                this grid
     displ      dictionary that will store displacement resiults
     pos        defines the grid position in the stiffness matrix
@@ -36,8 +38,8 @@ class Grid( Point ):
                grid
     array      point-like coordinates, always given in the basic cartesian
                coordinate system, used to create other coordsys
-    model      pointer to the model it belong to           
-    rebuilt    pointer to the model it belong to           
+    model      pointer to the model it belong to
+    rebuilt    pointer to the model it belong to
     ____________________________________________________________________________
 
     """
@@ -47,7 +49,7 @@ class Grid( Point ):
 
     def __init__( self, inputs = {} ):
         self.card = None
-        self.entryclass = None 
+        self.entryclass = None
         self.id = int( MAXID*rdm.random() )
         self.rcid = None
         self.rcobj = None
@@ -95,7 +97,7 @@ class Grid( Point ):
             return True
         else:
             return False
-        
+
     def rebuild( self ):
         self.cons = {}
         self.loads = {}
@@ -112,7 +114,7 @@ class Grid( Point ):
             if self.rcobj.card == 'CORD1S' or self.rcobj.card == 'CORD2S':
                 self.garray[1] = self.garray[1] * np.pi / 180.
                 self.garray[2] = self.garray[2] * np.pi / 180.
-            array = self.rcobj.transform( self.garray, CSYSGLOBAL ) 
+            array = self.rcobj.transform( self.garray, CSYSGLOBAL )
             super( Grid, self ).__init__( array, self.id )
         else:
             print 'The grid cannot be rebuilt, the coordsys has not'
@@ -136,7 +138,7 @@ class Grid( Point ):
                 print 'The transformation can not be done.'
                 print 'The grid rcobj (coordsys) was not rebuilt...'
                 raise
-                
+
     def add2model( self, model ):
         self.model = model
         model.griddict[self.id] = self
@@ -145,7 +147,7 @@ class Grid( Point ):
         if not int(sub_id) in self.loads.keys():
             self.loads[sub_id] = [ ZERO for i in xrange(6) ]
         self.loads[sub_id][dof - 1] += load
-    
+
     def add_cons( self, sub_id, dof ):
         if not int(sub_id) in self.cons.keys():
             self.cons[sub_id] = set([])
@@ -153,10 +155,10 @@ class Grid( Point ):
             self.cons[sub_id].add(dof)
         else:
             print 'Duplicated CONSTRAINT for GRID %d, dof %d' % (self.id, dof)
-    
+
     def attach_displ( self, sub_id, displ_vec ):
         self.displ[sub_id] = displ_vec
-    
+
     def read_card():
         #TODO if it is better to keep the card reading here instead of inside
         #     mapy.reader

@@ -49,11 +49,6 @@ even if the user changes the entities' ids. Currently there is a lot of search b
 - finite element solver for linear analysis (rods, beams, plates and solids)
 OBS: requires numpy, scipy. The project alg3dpy(Google code) is part of this project.
 
-Requires
---------
-- numpy
-- alg3dpy (https://code.google.com/p/alg3dpy/)
-
 Important
 ---------
 - while the fixed object id for grids, elements etc is not implemented,
