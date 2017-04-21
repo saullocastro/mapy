@@ -9,7 +9,7 @@ class Loads(object):
         pass
 
     def add2model(self, model):
-        self.model = model 
+        self.model = model
         model.loadcount += 1
         self.loadcount = model.loadcount
         model.loaddict[model.loadcount] = self
@@ -33,7 +33,7 @@ class Loads(object):
         for sub in self.subcases.values():
             if not sub.loadid in self.model.loaddict.keys():
                 lf = 1.
-            else:    
+            else:
                 load = self.model.loaddict[sub.loadid]
                 if load.__class__.__name__.find('Load') > -1:
                     lf = load.scaledict[self.id]
@@ -43,22 +43,22 @@ class Loads(object):
             grid.add_load(sub.id, ref + 2, lf * float(self.x2))
             grid.add_load(sub.id, ref + 3, lf * float(self.x3))
         return True
-        
+
 class Force(Loads):
 
-    def __init__(self, inputs):    
+    def __init__(self, inputs):
         Loads.__init__(self)
         self = user_setattr(self, inputs)
         self.lf = {}
         self.lf[self.id] = 1.
 
-    def rebuild(self):    
-        if getattr(self, 'g1id', False) <> False:
+    def rebuild(self):
+        if getattr(self, 'g1id', False) is not False:
             g1id = int(self.g1id)
             g2id = int(self.g2id)
             self.g1obj = self.model.griddict[g1id]
-            self.g2obj = self.model.griddict[g2id] 
-            self.calc_x1_x2_x3(model)
+            self.g2obj = self.model.griddict[g2id]
+            self.calc_x1_x2_x3(self.model)
         else:
             self.x1 = float(self.f) * float(self.x1)
             self.x2 = float(self.f) * float(self.x2)
@@ -72,37 +72,37 @@ class Force(Loads):
         self.x1 = float(self.f) * cosgama * cosbeta
         self.x2 = float(self.f) * sengama
         self.x3 = float(self.f) * cosgama * senbeta
-        
+
 
 class Moment(Loads):
 
-    def __init__(self, inputs):    
+    def __init__(self, inputs):
         Loads.__init__(self)
         self = user_setattr(self, inputs)
 
-    def rebuild(self):    
+    def rebuild(self):
         self.x1 = float(self.f) * float(self.x1)
         self.x2 = float(self.f) * float(self.x2)
         self.x3 = float(self.f) * float(self.x3)
 
 class Load(Loads):
 
-    def __init__(self, inputs):    
+    def __init__(self, inputs):
         Loads.__init__(self)
         self = user_setattr(self, inputs)
         self.loads = [int(i) for i in self.loads]
         self.scales = [float(i) for i in self.scales]
         self.scale_overall = float(self.scale_overall)
 
-    def rebuild(self):    
+    def rebuild(self):
         self.scaledict = {}
-        for i in xrange(len(self.loads)):
+        for i in range(len(self.loads)):
             self.scaledict[self.loads[i]] = self.scales[i] * self.scale_overall
 #        self.combload = {}
-#        for i in xrange(len(self.loads)):
+#        for i in range(len(self.loads)):
 #            load = int(self.loads[i])
 #            scale = float(self.scales[i])
 #            self.combload[load] = self.model.loaddict[load]
 #            self.combload[load].lf[self.id] = self.scale_overall * self.scale
-            
-            
+
+

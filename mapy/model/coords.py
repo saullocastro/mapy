@@ -1,12 +1,8 @@
+import numpy as np
 from alg3dpy.vector import Vec
 from alg3dpy.angles import cosplanevec, sinplanevec, cos2vecs, sin2vecs
 from alg3dpy.plane import Plane
 from alg3dpy.point import Point
-import random as rdm
-import numpy as np
-import mapy
-from mapy.reader import user_setattr
-from mapy.constants import *
 
 def common__str__(text, csys):
     if csys.rebuilt:
@@ -24,7 +20,7 @@ def common__str__(text, csys):
         return '%s ID %d:\n\
         \tNOT REBUILT...'\
         % ( text, csys.id )
-        
+
 
 class Coord(object):
     """
@@ -35,7 +31,7 @@ class Coord(object):
         z:  the Z axis
         vecxz: a point laying in the azimuthal origin
     Basically the point are defined using reference GRIDs or POINT coordinates.
-        
+
     Attributes:
     ____________________________________________________________________________
     card       the card name (NASTRAN etc)
@@ -56,9 +52,9 @@ class Coord(object):
     c1, c2, c3 components of the point defining the xz plane
     ida, idb   id of coordsys "a" or "b" when creating two coordsys in the
                same card. In NASTRAN, the cards: CORD1R, CORD1C or CORD1S
-    g1a, g1b   grid defining the origin of coordsys "a" or "b" 
-    g2a, g2b   grid defining the z axis of coordsys "a" or "b" 
-    g3a, g3b   grid defining the xz plane of coordsys "a" or "b" 
+    g1a, g1b   grid defining the origin of coordsys "a" or "b"
+    g2a, g2b   grid defining the z axis of coordsys "a" or "b"
+    g3a, g3b   grid defining the xz plane of coordsys "a" or "b"
     model      pointer to the model object it belongs to
     rebuilt    a flag to tell if this coordsys is already rebuilt
     ____________________________________________________________________________
@@ -80,7 +76,7 @@ class Coord(object):
         if id.__class__.__name__ == 'dict':
             inputs = id
             id = None
-        self.id    = id 
+        self.id    = id
         self.rcid  = rcid
         self.rcobj = None
         self.o     = o
@@ -90,7 +86,7 @@ class Coord(object):
         self.xy    = None
         self.xz    = None
         self.yz    = None
-        self.vecxz = vecxz 
+        self.vecxz = vecxz
         self.a1    = None
         self.a2    = None
         self.a3    = None
@@ -111,21 +107,22 @@ class Coord(object):
         self.model = None
         self.rebuilt = False
         self.read_inputs( inputs )
-        
-    def read_inputs( self, inputs = {} ):
+
+    def read_inputs(self, inputs={}):
+        from mapy.reader import user_setattr
         if len(inputs) > 0:
             self = user_setattr(self, inputs)
-        if self.id == None and self.ida <> None:
+        if self.id is None and self.ida is not None:
+            from mapy.constants import CSYSGLOBAL
             self.id = int(self.ida)
-            CSYSGLOBAL = mapy.constants.CSYSGLOBAL
             self.rcid = 0
             self.rcobj = CSYSGLOBAL
-        
+
     def add2model(self, model):
         self.model = model
         model.coorddict[self.id] = self
-        if  self.idb <> None\
-        and self.g1b <> None and self.g2b <> None and self.g3b <> None:
+        if  self.idb is not None\
+        and self.g1b is not None and self.g2b is not None and self.g3b is not None:
             if self.__class__.__name__.find('CoordR') > -1:
                 newcsys = CoordR( int(self.idb), None, None, None, None )
             if self.__class__.__name__.find('CoordC') > -1:
@@ -149,16 +146,16 @@ class Coord(object):
             self.g3b      = None
 
     def check_to_rebuild( self ):
-        if   self.a1 <> None and self.a2 <> None and self.a3 <> None \
-        and  self.b1 <> None and self.b2 <> None and self.b3 <> None \
-        and  self.c1 <> None and self.c2 <> None and self.c3 <> None:
+        if   self.a1 is not None and self.a2 is not None and self.a3 is not None \
+        and  self.b1 is not None and self.b2 is not None and self.b3 is not None \
+        and  self.c1 is not None and self.c2 is not None and self.c3 is not None:
             rcobj = self.model.coorddict[ int(self.rcid) ]
             if rcobj.rebuilt:
                 return True
             else:
                 return False
-        elif self.ida <> None \
-        and  self.g1a <> None and self.g2a <> None and self.g3a <> None:
+        elif self.ida is not None \
+        and  self.g1a is not None and self.g2a is not None and self.g3a is not None:
             g1a       = self.model.griddict[ int(self.g1a) ]
             g2a       = self.model.griddict[ int(self.g2a) ]
             g3a       = self.model.griddict[ int(self.g3a) ]
@@ -166,89 +163,89 @@ class Coord(object):
             or not g2a.rebuilt \
             or not g3a.rebuilt:
                 return False
-            else: 
+            else:
                 return True
 
         else:
-            print 'FIXME'
-            raise
+            print('FIXME')
+            raise NotImplementedError()
 
-    def rebuild(self, rcobj = None, force_new_axis = False ):
+    def rebuild(self, rcobj=None, force_new_axis=False):
+        from mapy.constants import CSYSGLOBAL, FLOAT
         new_axis = False
-        if self.o == None or self.z == None or self.vecxz == None:
+        if self.o is None or self.z is None or self.vecxz is None:
             new_axis = True
         if not new_axis:
             if self.o.__class__.__name__.find('Point') == -1:
                 self.o = Point( np.array([ 0,0,0 ], dtype=FLOAT ) )
-            if self.z == None:
-                print 'Please, enter a valid z axis...'
-                raise
-            if self.vecxz == None:
-                print 'Please, enter a valid vector in the xz plane...'
-                raise
+            if self.z is None:
+                print('Please, enter a valid z axis...')
+                raise ValueError()
+            if self.vecxz is None:
+                print('Please, enter a valid vector in the xz plane...')
+                raise ValueError()
             if self.z.__class__.__name__.find('Vec') == -1:
                 self.z = Vec( self.z )
             if self.vecxz.__class__.__name__.find('Vec') == -1:
                 self.vecxz = Vec( self.vecxz )
         if new_axis or force_new_axis:
-            if self.model == None:
-                print 'The coordinate system must belong to a model...'
-                print 'the user may create a coordsys giving directly:'
-                print '- origin as a alg3dpy.Point'
-                print '- z axis as a alg3dpy.Vec'
-                print '- alg3dpy.Vec laying on xz plane'
-                raise
-            if   self.a1 <> None and self.a2 <> None and self.a3 <> None \
-            and  self.b1 <> None and self.b2 <> None and self.b3 <> None \
-            and  self.c1 <> None and self.c2 <> None and self.c3 <> None:
+            if self.model is None:
+                print('The coordinate system must belong to a model...')
+                print('the user may create a coordsys giving directly:')
+                print('- origin as a alg3dpy.Point')
+                print('- z axis as a alg3dpy.Vec')
+                print('- alg3dpy.Vec laying on xz plane')
+                raise ValueError()
+            if (self.a1 is not None and self.a2 is not None and self.a3 is not None
+            and self.b1 is not None and self.b2 is not None and self.b3 is not None
+            and self.c1 is not None and self.c2 is not None and self.c3 is not None):
                 self.rcobj = self.model.coorddict[ int(self.rcid) ]
                 if self.rcobj.rebuilt:
                     #FIXME destroying the reference to rcobj original
                     p1 = np.array([self.a1, self.a2, self.a3], dtype=FLOAT)
                     p2 = np.array([self.b1, self.b2, self.b3], dtype=FLOAT)
                     p3 = np.array([self.c1, self.c2, self.c3], dtype=FLOAT)
-                    CSYSGLOBAL = mapy.constants.CSYSGLOBAL
                     p1 = self.rcobj.transform( p1, CSYSGLOBAL )
                     p2 = self.rcobj.transform( p2, CSYSGLOBAL )
                     p3 = self.rcobj.transform( p3, CSYSGLOBAL )
-                    self.rcid  = CSYSGLOBAL.id 
-                    self.rcobj  = CSYSGLOBAL
-                    self.o     = p1
-                    self.z     = p2 - p1
+                    self.rcid = CSYSGLOBAL.id
+                    self.rcobj = CSYSGLOBAL
+                    self.o = p1
+                    self.z = p2 - p1
                     self.vecxz = p3 - p1
 
                 else:
-                    print 'The coordsys cannot be rebuilt. The reference'
-                    print 'coordsys given by rcid is not rebuilt...'
+                    print('The coordsys cannot be rebuilt. The reference')
+                    print('coordsys given by rcid is not rebuilt...')
                     raise
-            elif self.ida <> None\
-            and  self.g1a <> None and self.g2a <> None and self.g3a <> None:
+            elif self.ida is not None\
+            and  self.g1a is not None and self.g2a is not None and self.g3a is not None:
                 g1a       = self.model.griddict[ int(self.g1a) ]
                 g2a       = self.model.griddict[ int(self.g2a) ]
                 g3a       = self.model.griddict[ int(self.g3a) ]
                 if not g1a.rebuilt \
                 or not g2a.rebuilt \
                 or not g3a.rebuilt:
-                    print 'The coordsys cannot be rebuilt. The reference'
-                    print 'grids g1a, g2a and g3a are not rebuilt...'
+                    print('The coordsys cannot be rebuilt. The reference')
+                    print('grids g1a, g2a and g3a are not rebuilt...')
                     raise
                 self.o     = Point( g1a.array )
                 self.z     = g2a - g1a
-                self.vecxz = g3a - g1a 
+                self.vecxz = g3a - g1a
             else:
-                print 'Something wrong with your inputs'
-                print 'Please, see all the attributes below:'
+                print('Something wrong with your inputs')
+                print('Please, see all the attributes below:')
                 for slot in self.__slots__:
-                    print '\t' + slot + '', getattr(self, slot)
-                raise 
+                    print('\t' + slot + '', getattr(self, slot))
+                raise ValueError()
 
-        self.y  = self.z.cross( self.vecxz )
-        self.x  = self.y.cross(     self.z )
-        self.xy = Plane(  self.z[0],  self.z[1],  self.z[2], self.o.mod() ) 
-        self.xz = Plane( -self.y[0], -self.y[1], -self.y[2], self.o.mod() )
-        self.yz = Plane(  self.x[0],  self.x[1],  self.x[2], self.o.mod() )
+        self.y = self.z.cross(self.vecxz)
+        self.x = self.y.cross(self.z)
+        self.xy = Plane(  self.z[0],  self.z[1],  self.z[2], np.linalg.norm(self.o) )
+        self.xz = Plane( -self.y[0], -self.y[1], -self.y[2], np.linalg.norm(self.o) )
+        self.yz = Plane(  self.x[0],  self.x[1],  self.x[2], np.linalg.norm(self.o) )
         self.rebuilt = True
-            
+
     def transform(self, vec, new_csys):
         """
         The transformation will go as follows:
@@ -263,18 +260,19 @@ class Coord(object):
         coordinates to its cylindrical or spherical coordinates.
         All coordinate systems have the method cr2me to transform from
         local cartesian to local something.
-            
+
         """
+        from mapy.constants import CSYSGLOBAL
         #FIXME modify this to keep the original reference to rcobj
-        if new_csys == None:
-            new_csys = CSYSGLOBAL 
+        if new_csys is None:
+            new_csys = CSYSGLOBAL
         vec_cr = self.vec2cr( vec )
         R      = self.Rmatrix( new_csys )
-        vec_rot = np.dot( R, vec_cr ) 
-        vec_t  = self.translate( vec_rot, new_csys ) 
+        vec_rot = np.dot( R, vec_cr )
+        vec_t  = self.translate( vec_rot, new_csys )
         vec_final = new_csys.cr2me( vec_t )
         return vec_final
-                 
+
     def translate(self, vec, newcr):
         """
         Calculates the translation matrix to a new cartesian system (newcr)
@@ -287,6 +285,7 @@ class Coord(object):
         """
         Calculates the rotation matrix to a new cartesian system (newcr)
         """
+        from constants import ZER, FLOAT
         cosb = cosplanevec( newcr.xy, self.x )
         sinb = sinplanevec( newcr.xy, self.x )
         cosg = cosplanevec( newcr.xz, self.x )
@@ -307,6 +306,7 @@ class Coord(object):
         return R2new
 
     def R2basic(self):
+        from mapy.constants import CSYSGLOBAL
         return self.Rmatrix( CSYSGLOBAL )
 
 class CoordR(Coord):
@@ -331,24 +331,26 @@ class CoordC(Coord):
         Transformation from cylindrical to cartesian
         vec must be in cylindrical cordinates: [r, theta, z]
         """
+        from mapy.constants import ZER, FLOAT, ONE
         T =  np.array([\
             [ np.cos( vec[1] ), ZER,   ZER ],
             [ ZER, np.sin( vec[1] ),   ZER ],
             [ ZER,                ZER, ONE ]])
-        tmp = np.array([ vec[0], vec[0], vec[2] ], dtype=FLOAT) 
-        vec_cr = np.dot( T, tmp ) 
+        tmp = np.array([ vec[0], vec[0], vec[2] ], dtype=FLOAT)
+        vec_cr = np.dot( T, tmp )
         return vec_cr
-    
+
     def cr2me( self, vec ):
         """
         Transformation from cartesian to cylindrical
         vec must be in cartesian coordinates: [x, y, z]
         """
+        from mapy.constants import ZER, FLOAT, ONE
         T = np.array([\
             [ np.sqrt( vec[0] ** 2 + vec[1] ** 2 ), ZER,   ZER ],
             [ ZER,           np.arctan( vec[1] / vec[0] ),   ZER ],
             [ ZER,                                    ZER, ONE ]])
-        tmp = np.array([ 1, 1, vec[2] ], dtype=FLOAT) 
+        tmp = np.array([ 1, 1, vec[2] ], dtype=FLOAT)
         return np.dot( T, tmp )
 
     def __str__(self):
@@ -363,11 +365,12 @@ class CoordS(Coord):
         Transformation from spherical to cartesian
         vec must be in spherical coordinates: [r, theta, phi]
         """
+        from mapy.constants import ZER, FLOAT
         T =  np.array([\
             [ np.sin( vec[1] )*np.cos( vec[2] ), ZER, ZER ],
             [ ZER, np.sin( vec[1] )*np.sin( vec[2] ), ZER ],
             [ ZER, ZER,                  np.cos( vec[1] ) ]])
-        tmp = np.array([ vec[0], vec[0], vec[0] ], dtype=FLOAT) 
+        tmp = np.array([ vec[0], vec[0], vec[0] ], dtype=FLOAT)
         return np.dot( T, tmp )
 
     def cr2me( self, vec ):
@@ -375,11 +378,12 @@ class CoordS(Coord):
         Transformation from cartesian to spherical
         vec must be in cartesian coordinates: [x, y, z]
         """
+        from mapy.constants import ZER, FLOAT
         h = vec[0] ** 2 + vec[1] ** 2
         T = np.array([\
             [ np.sqrt( h + vec[2] ** 2 ),     ZER,   ZER ],
             [ ZER, np.arctan( np.sqrt(h) / vec[2] ),   ZER ],
-            [ ZER,       ZER, np.arctan( vec[1] / vec[0] ) ]]) 
+            [ ZER,       ZER, np.arctan( vec[1] / vec[0] ) ]])
         tmp = np.array([ 1, 1, 1], dtype=FLOAT)
         return np.dot( T, tmp )
 
@@ -387,4 +391,4 @@ class CoordS(Coord):
         return common__str__('Spherical Coord Sys', self)
 
 # Weisstein, Eric W. "Rotation Matrix." From MathWorld--A Wolfram Web Resource.
-#   http://mathworld.wolfram.com/RotationMatrix.html 
+#   http://mathworld.wolfram.com/RotationMatrix.html

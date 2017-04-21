@@ -1,20 +1,21 @@
-import mapy
-from mapy.reader import *
+import os
+
+from mapy.reader.cardtranslator import translator
 global tempcard
+
 def addfield(tempcard, field, value):
-    found = False	
     field = float(field)
     field += 1
     for k in tempcard.keys():
         if k.find('___') > -1:
             entrynum = float(k.split('___')[2])
             step = float(k.split('___')[3])
-            found = False
             if (field - entrynum)/step == 0 or (field - entrynum)/step == 1:
-                found = True
-                tempcard[k].append(value)    
+                tempcard[k].append(value)
                 break
+
 def fieldsnum(line):
+    print('DEBUG line', line)
     if line.find(',') == -1:
         line = line.split('\n')[0]
         num = len(line)/8
@@ -23,10 +24,11 @@ def fieldsnum(line):
             num = num + 1
     else:
         num = len(line.split(','))
+    print('DEBUG num', num)
     return num
 
 class InputFile:
-    """ 
+    """
     Input file containing a FEM model bulk
 
     """
@@ -44,7 +46,7 @@ class InputFile:
         if os.path.isfile(self.abspath):
             datfile = open(self.abspath, 'r')
         else:
-            raise 'Input file : %s was not found!' % self.abspath
+            raise ValueError('Input file : %s was not found!' % self.abspath)
         self.lines = datfile.readlines()
         datfile.close()
 
@@ -52,20 +54,25 @@ class InputFile:
         self.lines = None
 
     def createdata(self):
-        #
-        self.data = [] 
-        #
+        self.data = []
+        validentry = False
+        countentry = 0
+        bulk = False
         for i in range(len(self.lines)):
             line = self.lines[i]
-            if line.strip()[0] == '$':
+            if line.strip().startswith('$'):
                 continue
+            if not bulk:
+                continue
+            if 'BEGIN BULK' in line.upper():
+                bulk = True
             if line.find(',') > -1:
                 numfields = fieldsnum(line)
                 fields = [i.strip() for i in line.split(',')]
             else:
                 numfields = fieldsnum(line)
-                fields = [line[(0 + i * 8):(8 + i * 8)].strip()\
-		         		  for i in range(numfields)]
+                print('DEBUG numfields', numfields)
+                fields = [line[(0 + i * 8):(8 + i * 8)].strip() for i in range(numfields)]
             if (fields[0].find('+') > -1 or fields[0] == '' or \
                 fields[0] == '        ') and validentry == True:
                 countentry += 1
@@ -74,30 +81,28 @@ class InputFile:
                 countentry = 0
                 currcard = fields[0]
                 cardfieldsnum = len(self.cards[currcard])
-                try: 
-                    if len(tempcard) > 0: 
-                        self.data.append(tempcard)    
+                try:
+                    if len(tempcard) > 0:
+                        self.data.append(tempcard)
                 except NameError:
                     pass
                 tempcard = {}
-                listentries = None
             else:
                 validentry = False
                 countentry = 0
             if validentry == True or countentry > 0:
-                blanknum = 10 - numfields
                 for field_i in range(numfields):
-                    field_j = field_i + 10 * countentry  			
-                    fieldvalue = fields[field_i] 
+                    field_j = field_i + 10 * countentry
+                    fieldvalue = fields[field_i]
                     if (field_j + 1) <= cardfieldsnum:
-                        fieldname = self.cards[currcard][field_j] 
-                        if fieldname.find('___') > -1:    
+                        fieldname = self.cards[currcard][field_j]
+                        if fieldname.find('___') > -1:
                             tempcard[fieldname] = [fieldvalue]
-                        else:    
+                        else:
                             tempcard[fieldname] = fieldvalue
                     else:
                         addfield(tempcard, field_i, fieldvalue)
-                
+
                 #FIXME the for below was commented because it aimed to blank the
                 #fields... they are simply ignored in the
                 #mapy.reader.user_setattr method, using the given 'blank' flag
@@ -105,8 +110,8 @@ class InputFile:
                 #    tmp = blank_field_i + numfields
                 #    if (tmp + 1) <= cardfieldsnum:
                 #        tempcard[self.cards[currcard][tmp]] = ''
-        try: 
-            if len(tempcard) > 0: 
-                self.data.append(tempcard)    
+        try:
+            if len(tempcard) > 0:
+                self.data.append(tempcard)
         except NameError:
             pass

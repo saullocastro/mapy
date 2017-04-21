@@ -1,6 +1,4 @@
 import time
-import os
-import constraints
 from mapy.constants import CSYSGLOBAL
 
 def get_cons(grid, sub_id):
@@ -91,19 +89,19 @@ class Model(object):
         '''
         Build the global stiffness matrix
         '''
-        print time.ctime() + ' started  - building grid positions in global stiffness matrix'
+        print(time.ctime() + ' started  - building grid positions in global stiffness matrix')
         self.build_k_pos()
-        print time.ctime() + ' finished - building grid positions in global stiffness matrix'
-        print time.ctime() + ' started  - building lists of constraints'
+        print(time.ctime() + ' finished - building grid positions in global stiffness matrix')
+        print(time.ctime() + ' started  - building lists of constraints')
         self.build_index_to_delete()
-        print time.ctime() + ' finished - building lists of constraints'
-        print time.ctime() + ' started  - building global K stiffness matrix'
+        print(time.ctime() + ' finished - building lists of constraints')
+        print(time.ctime() + ' started  - building global K stiffness matrix')
         self.build_k_coo()
         self.build_k_coo_sub()
-        print time.ctime() + ' finished - building global K stiffness matrix'
-        print time.ctime() + ' started  - building global F load matrices'
+        print(time.ctime() + ' finished - building global K stiffness matrix')
+        print(time.ctime() + ' started  - building global F load matrices')
         self.build_F()
-        print time.ctime() + ' finished - building global F load matrices'
+        print(time.ctime() + ' finished - building global F load matrices')
 
 
     def build_k_pos(self):
@@ -120,7 +118,7 @@ class Model(object):
         for sub in self.subcases.values():
             k_offset[sub.id] = []
             offset = 0
-            for i in xrange(len(k_pos)):
+            for i in range(len(k_pos)):
                 if i > 0:
                     gi_1_id = k_pos[ i-1 ]
                     gi_1 = self.griddict[ gi_1_id ],
@@ -158,9 +156,9 @@ class Model(object):
         col =  scipy.zeros(shape=0, dtype='int64')
         for elem in self.elemdict.values():
             elem.build_k()
-            for i in xrange(len(elem.grids)):
+            for i in range(len(elem.grids)):
                 gi = elem.grids[i]
-                for j in xrange(len(elem.grids)):
+                for j in range(len(elem.grids)):
                     gj = elem.grids[j]
                     k_grid = assparse.in_sparse(elem.k,i*6,i*6+5,j*6,j*6+5)
                     #
@@ -196,21 +194,21 @@ class Model(object):
             self.k_coo_sub[sub.id] = k
 
     def build_F(self):
+        import scipy
         self.F = {}
         for sub in self.subcases.values():
             dim = self.k_coo_sub[sub.id].shape[1]
             self.F[sub.id] = scipy.zeros(shape=dim, dtype='float64')
-            itd = self.index_to_delete
         for gid in self.k_pos:
             grid = self.griddict[gid]
             grid_load = grid.loads
             for sub in self.subcases.values():
                 if sub.id in grid_load.keys():
                     loads = grid_load[sub.id]
-                    k_offset = grid.k_offset[sub.id]
-                    cons = get_cons(grid, sub.id)
-                    sub_i = 0
-                    for i in xrange(6):
+                    #k_offset = grid.k_offset[sub.id]
+                    #cons = get_cons(grid, sub.id)
+                    #sub_i = 0
+                    for i in range(6):
                         index = i + grid.pos*6
                         self.F[sub.id][index] = loads[i]
 
@@ -255,13 +253,13 @@ class Model(object):
             col =  scipy.zeros(0, dtype='int64')
             for elem in self.elemdict.values():
                 numg = len( elem.grids )
-                for i in xrange( numg ):
+                for i in range( numg ):
                     gi = elem.grids[ i ]
                     offseti = gi.k_offset[ sub.id ]
                     consi = set( [] )
                     if sub.id in gi.cons.keys():
                         consi = gi.cons[ sub.id ]
-                    for j in xrange( numg ):
+                    for j in range( numg ):
                         gj = elem.grids[ j ]
                         offsetj = gj.k_offset[ sub.id ]
                         consj = set( [] )
@@ -292,9 +290,3 @@ class Model(object):
                                         col  = scipy.append( col  , newc )
             k_coo = ss.coo_matrix(( data, (row,col) ), shape=(dim,dim))
             self.k_coo_sub[sub.id] = k_coo
-import grids
-import elements
-import constraints
-import loads
-import materials
-import properties

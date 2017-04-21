@@ -14,7 +14,7 @@ class ElemBar(Elem1D):
         self.calc_vecs()
         self.calc_Rmatrix()
         self.build_kelem()
-    
+
     def calc_ovec(self):
         if self.x2 == '' or self.x3 == '':
             gref = self.model.griddict[int(self.x1)]
@@ -23,14 +23,14 @@ class ElemBar(Elem1D):
                                      (gref.x3 - self.grids[0].x3)])
         else:
             self.ovec = alg3dpy.Vec(self.x1, self.x2, self.x3)
-   
+
     def test_build_kelem(self):
         return
+        import scipy
+        import numpy as np
         #
         #FIXME these k below are valid for rectangular sections only
-        x1 = 0.
         x2 = self.L
-        A   = self.pobj.a
         C = self.pobj.C
         E   = self.pobj.matobj.e
         G   = self.pobj.G
@@ -45,7 +45,7 @@ class ElemBar(Elem1D):
             h1r = -1/2.
             h2 = (1+r)/2.
             h2r = 1/2.
-            J  = x2/2.  #h1r*x1 + h2r*x2 
+            J  = x2/2.  #h1r*x1 + h2r*x2
             #truss
             Bi = 1./J * scipy.array([\
              [ h1r,0,0,0,0,0,         h2r,0,0,0,0,0      ],  #ex
@@ -77,11 +77,11 @@ class ElemBar(Elem1D):
 #                                     [ 0,0,0,0,0,0,       0,0,0,0,0,0 ],
 #                                     [ 0,0,0,0,h1r,0,   0,0,0,0,h2r,0 ]])
 #            kelem += E*Iyy*np.dot( Bb.transpose(), Bb )*J
-        print 'E',E
-        print 'G',G
-        print 'Izz',Izz
-        print 'Iyy',Iyy
-        
+        print('E', E)
+        print('G', G)
+        print('Izz', Izz)
+        print('Iyy', Iyy)
+
         self.kelem = kelem * 2.
 
     def build_kelem(self):
@@ -123,5 +123,5 @@ class ElemBar(Elem1D):
             ua = self.displ[sub.id](0)
             tmp['axial_stress'] = ( ub - ua ) * (E / L)
             tmp['axial_force'] = A * tmp['axial_stress']
-            
+
             self.out_vecs[sub.id] = tmp

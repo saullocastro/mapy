@@ -1,6 +1,3 @@
-import os
-from cardtranslator import *
-from input_reader import *
 def user_setattr(obj, inputs):
     for k,v in inputs.iteritems():
         if k.find('blank') > -1:
@@ -12,13 +9,13 @@ def user_setattr(obj, inputs):
             try:
                 setattr(obj, k, float( v ) )
             except:
-                print 'Exception in mapy.reader.user_setattr...'
-                print 'str_test is ', str_test
-                print 'v is ', v
-                setattr(obj, k, v )
+                print('Exception in mapy.reader.user_setattr...')
+                print('str_test is ', str_test)
+                print('v is ', v)
+                setattr(obj, k, v)
         elif k.find('id') > -1:
             if v == None or v == '':
-               setattr(obj, k, v ) 
+               setattr(obj, k, v )
             else:
                 setattr(obj, k, int( v ))
         else:

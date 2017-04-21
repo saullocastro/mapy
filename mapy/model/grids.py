@@ -1,11 +1,10 @@
 import random as rdm
 
 import numpy as np
-from alg3dpy import Point
+from alg3dpy.point import Point
 
 from mapy.reader import user_setattr
-from mapy.coords import Coord, CoordR, CoordC, CoordS
-from mapy.constants import *
+from mapy.constants import CSYSGLOBAL, MAXID, FLOAT
 
 class Grid( Point ):
     """
@@ -50,7 +49,7 @@ class Grid( Point ):
     def __init__( self, inputs = {} ):
         self.card = None
         self.entryclass = None
-        self.id = int( MAXID*rdm.random() )
+        self.id = int(MAXID*rdm.random())
         self.rcid = None
         self.rcobj = None
         self.x1 = None
@@ -74,7 +73,7 @@ class Grid( Point ):
 
     def read_inputs( self, inputs = {} ):
         self = user_setattr(self, inputs)
-        if self.perm_cons.__class__.__name__ <> 'set':
+        if self.perm_cons.__class__.__name__ != 'set':
             str_perm_cons = self.perm_cons
             self.perm_cons = set([int(dof) for dof in str_perm_cons])
         #checking strings
@@ -117,9 +116,9 @@ class Grid( Point ):
             array = self.rcobj.transform( self.garray, CSYSGLOBAL )
             super( Grid, self ).__init__( array, self.id )
         else:
-            print 'The grid cannot be rebuilt, the coordsys has not'
-            print 'been updated...'
-            raise
+            print('The grid cannot be rebuilt, the coordsys has not')
+            print('been updated...')
+            raise ValueError()
         self.rebuilt = True
 
 
@@ -135,9 +134,9 @@ class Grid( Point ):
             if self.rcobj.rebuilt:
                 return self.rcobj.transform( self.array, new_csys )
             else:
-                print 'The transformation can not be done.'
-                print 'The grid rcobj (coordsys) was not rebuilt...'
-                raise
+                print('The transformation can not be done.')
+                print('The grid rcobj (coordsys) was not rebuilt...')
+                raise ValueError()
 
     def add2model( self, model ):
         self.model = model
@@ -145,7 +144,7 @@ class Grid( Point ):
 
     def add_load( self, sub_id, dof, load ):
         if not int(sub_id) in self.loads.keys():
-            self.loads[sub_id] = [ ZERO for i in xrange(6) ]
+            self.loads[sub_id] = [0 for i in range(6)]
         self.loads[sub_id][dof - 1] += load
 
     def add_cons( self, sub_id, dof ):
@@ -154,7 +153,7 @@ class Grid( Point ):
         if not dof in self.cons[sub_id]:
             self.cons[sub_id].add(dof)
         else:
-            print 'Duplicated CONSTRAINT for GRID %d, dof %d' % (self.id, dof)
+            print('Duplicated CONSTRAINT for GRID %d, dof %d' % (self.id, dof))
 
     def attach_displ( self, sub_id, displ_vec ):
         self.displ[sub_id] = displ_vec
@@ -171,8 +170,8 @@ class Grid( Point ):
     def print_displ( self, sub_id ):
         if sub_id in self.displ.keys():
             d = self.displ[sub_id]
-            print 'GRID,%d,SUB,%d,DISPL,%f,%f,%f,%f,%f,%f' %\
-                  tuple([ self.id , sub_id ] + [t for t in d])
+            print('GRID,%d,SUB,%d,DISPL,%f,%f,%f,%f,%f,%f' %
+                  tuple([ self.id , sub_id ] + [t for t in d]))
 
     def __str__( self ):
         return 'Grid ID %d:\n\

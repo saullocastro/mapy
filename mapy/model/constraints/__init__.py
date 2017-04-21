@@ -5,7 +5,7 @@ class SPC(object):
     __slots__ = ['card','entryclass','id','gridid','dof','displ','g2',
                  'c2','d2','model','conscount']
 
-    def __init__(self, inputs):    
+    def __init__(self, inputs):
         self.card = None
         self.entryclass = None
         self.id = None
@@ -18,10 +18,10 @@ class SPC(object):
         self.model = None
         self.conscount = None
         self = user_setattr(self, inputs)
-        if self.dof.__class__.__name__ <> 'list':
+        if self.dof.__class__.__name__ != 'list':
             str_dof = self.dof
             self.dof = set([int(dof) for dof in str_dof])
-    
+
     def add2model(self, model):
         self.model = model
         model.conscount += 1
@@ -29,8 +29,8 @@ class SPC(object):
         model.consdict[model.conscount] = self
         #FIXME if g2 , c2 and d2 are given, nothing is done...
         if self.g2:
-            print 'ERROR in SPC application for grid %s!!!' \
-                  % str(self.g2)
+            print('ERROR in SPC application for grid %s!!!' \
+                  % str(self.g2))
 
     def add2grid(self, model):
         grid = model.griddict[int(self.gridid)]

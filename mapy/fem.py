@@ -1,5 +1,11 @@
+from __future__ import absolute_import
+
 import os
-#import solver
+
+from .reader.input_reader import InputFile
+from .reader.cardtranslator import card2dict
+from . import model
+
 class FEM(object):
     '''
     Finite Element Method class
@@ -12,16 +18,17 @@ class FEM(object):
 
     def read_new_file(self, file_path, solvername='nastran'):
         solvername = solvername.lower()
-        self.file = reader.InputFile(file_path, solvername)
+        self.file = InputFile(file_path, solvername)
         model_name = os.path.basename(file_path)
         self.create_model(model_name)
         for data in self.file.data:
-            outputcard = reader.card2dict(data, self.file.solvername)
+            outputcard = card2dict(data, self.file.solvername)
             obj = outputcard['entryclass'](outputcard)
             obj.entryclass = str(obj.entryclass)
             obj.add2model(self.model)
 
     def solve_k_coo_sub(self):
+        from . import solver
         [full_displ, full_F] = solver.solve_k_coo_sub(self.model)
         ind = 0
         for gid in self.model.k_pos:

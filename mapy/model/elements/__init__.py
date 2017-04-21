@@ -1,6 +1,8 @@
+import numpy as np
 import alg3dpy
+
 class Elements(object):
-    
+
     __slots__ = [ 'id', 'model', 'xvec', 'yvec', 'zvec', 'mask', 'tmp', \
                   'grids', 'cg', 'pobj', 'entryclass', 'card', 'panel' ]
 
@@ -10,20 +12,20 @@ class Elements(object):
         self.panel = None
 
     def rebuild(self):
-        if getattr(self, 'pid', False) <> False:
+        if getattr(self, 'pid', False) is not False:
             prop = self.model.propdict[int(self.pid)]
             self.pobj = prop
-    
+
     def calc_cg(self):
-        self.cg = alg3dpy.Point( [0,0,0] ) 
+        self.cg = alg3dpy.Point( [0,0,0] )
         for grid in self.grids:
-            self.cg.x1 += grid.x1 
+            self.cg.x1 += grid.x1
             self.cg.x2 += grid.x2
             self.cg.x3 += grid.x3
         N = len(self.grids)
         self.cg.x1 /= N
-        self.cg.x2 /= N 
-        self.cg.x3 /= N 
+        self.cg.x2 /= N
+        self.cg.x3 /= N
 
     def add2model(self, model):
         self.model = model
@@ -51,29 +53,28 @@ class Elements(object):
             -cosa*sing+cosg*sina*sinb,  cosa*cosg+sina*sinb*sing, cosb*sina,
              sina*sing+cosa*cosg*sinb, -cosg*sina+cosa*sinb*sing, cosa*cosb],\
              dtype='float32')
-        row = scipy.array([0, 0, 0, 1, 1, 1, 2, 2, 2], dtype='int8') 
+        row = scipy.array([0, 0, 0, 1, 1, 1, 2, 2, 2], dtype='int8')
         col = scipy.array([0, 1, 2, 0, 1, 2, 0, 1, 2], dtype='int8')
         self.Rcoord2el = ss.coo_matrix((tmp, (row, col)), shape = (3,3),\
                             dtype='float32')
         self.Rcoord2global = self.Rcoord2el.transpose()
         #
         data = scipy.array(scipy.zeros( 18*gridnum ))
-        for i in xrange( gridnum ):
-            for j in xrange(9):
-                data[ 18*i + j ] = tmp[j] 
+        for i in range( gridnum ):
+            for j in range(9):
+                data[ 18*i + j ] = tmp[j]
         row = scipy.array(\
-            [i for i in xrange(dim) for j in xrange( 3 )], dtype='int8')
+            [i for i in range(dim) for j in range( 3 )], dtype='int8')
         col = scipy.array(\
-            [j + int(i/3)*3 for i in xrange(dim) for j in xrange( 3 )],
+            [j + int(i/3)*3 for i in range(dim) for j in range( 3 )],
             dtype='int8')
-                
+
         #self.R2el converts from the global to the elements'
         self.R2el = ss.coo_matrix((data, (row, col)), shape = (dim,dim),
                                   dtype='float32')
         self.R2global = self.R2el.transpose()
-        
+
     def build_k(self):
-        import scipy
         import scipy.sparse as ss
         self.kelem = ss.coo_matrix( self.kelem )
         R = self.R2el.tocsc()
@@ -82,15 +83,16 @@ class Elements(object):
         k = np.dot( Rinv, kelem )
         k = np.dot( k, R )
         self.k = k.tocoo()
-       
+
 
     def calc_displ(self):
+        import scipy
         self.displ = {}
         for sub in self.model.subcases.values():
             displ = scipy.zeros(0)
             for grid in self.grids:
                 count = 0
-                lst = [count*6 for i in xrange(6)]
+                lst = [count*6 for i in range(6)]
                 scipy.insert( displ, lst, grid.displ[sub.id] )
                 count += 1
             self.displ[sub.id] = self.R2el * displ

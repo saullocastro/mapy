@@ -1,8 +1,9 @@
-import numpy as np
-from alg3dpy.constants import *
+from alg3dpy.vector import asvector
+from alg3dpy.constants import Z, O, FLOAT, ZER, INT
 from mapy.model.coords import CoordR
-vecxz = Vec( np.array((1,0,1), dtype=FLOAT) )
-CSYSGLOBAL = CoordR(0, O, None, Z, vecxz )
-CSYSGLOBAL.rebuild( rcobj = None, force_new_axis = False )
+vecxz = asvector([1.,0.,1.])
+CSYSGLOBAL = CoordR(0, O, None, Z, vecxz)
+CSYSGLOBAL.rebuild(rcobj=None, force_new_axis=False)
 CSYSGLOBAL.rcobj = CSYSGLOBAL
+MAXID = 99999999
 

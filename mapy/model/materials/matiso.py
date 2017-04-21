@@ -1,16 +1,17 @@
 from mapy.model.materials import Materials
 from mapy.reader import user_setattr
+
 class MatIso(Materials):
     """
     Defines an isotropic material.
-        
+
     Attributes:
     ____________________________________________________________________________
     card       the card name (NASTRAN etc)
     entryclass path to the class name
     id         material id
     e          Young Modulus
-    g          shear modulus 
+    g          shear modulus
     nu         Poisson's ratio
     rho        especific mass (mass / volume)
     a          thermal expansion coeffiecient
@@ -47,4 +48,4 @@ class MatIso(Materials):
     def read_inputs( self, inputs = {} ):
         if len( inputs ) > 0:
             self = user_setattr( self, inputs )
-        
+

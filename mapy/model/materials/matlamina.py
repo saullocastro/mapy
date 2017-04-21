@@ -1,7 +1,7 @@
 import numpy as np
 from mapy.model.materials import Materials
 from mapy.reader import user_setattr
-from mapy.constants import ONE, ZER, FLOAT
+from mapy.constants import ZER, FLOAT
 
 class MatLamina(Materials):
     """
@@ -208,8 +208,8 @@ def read_laminaprop(laminaprop = None, rebuild=True):
     #laminaProp = (e1, e2, nu12, g12, g13, g23, e3, nu13, nu23)
     #laminaProp  units   N/mm2
     if laminaprop == None:
-        print 'ERROR - laminaprop must be a tuple in the following format:'
-        print '        (e1, e2, nu12, g12, g13, g23, e3, nu13, nu23)'
+        print('ERROR - laminaprop must be a tuple in the following format:')
+        print('        (e1, e2, nu12, g12, g13, g23, e3, nu13, nu23)')
     if len(laminaprop) == 3: #ISOTROPIC
         e = laminaprop[0]
         nu = laminaprop[2]

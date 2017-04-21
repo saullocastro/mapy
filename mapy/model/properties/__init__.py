@@ -4,22 +4,22 @@ class Properties(object):
     def __init__(self):
         pass
 
-    def rebuild(self):    
-        if getattr(self, 'mid', False) <> False:
+    def rebuild(self):
+        if getattr(self, 'mid', False) is not False:
             self.matobj = self.model.matdict[int(self.mid)]
-            self.build_C()    
+            self.build_C()
 
-    def add2model(self, model):    
+    def add2model(self, model):
         self.model = model
         model.propdict[self.id] = self
 
     def print_warning(self, lines):
-        print 'WARNING: see property %d' % self.id
+        print('WARNING: see property %d' % self.id)
         for line in lines:
-            print '         ' + line
+            print('         ' + line)
 
     def print_error(self, lines):
-        print 'ERROR  : see property %d' % self.id
+        print('ERROR  : see property %d' % self.id)
         for line in lines:
-            print '         ' + line
+            print('         ' + line)
 
