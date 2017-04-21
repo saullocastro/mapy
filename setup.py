@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-VERSION = "0.10.0"
+VERSION = "0.15.0"
 
 setup(
     name = "mapy_package",
